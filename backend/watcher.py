@@ -112,12 +112,12 @@ def pdf_to_text(path: str) -> str:
     pages = []
     for p in reader.pages:
         t = p.extract_text() or ""
+        # Remove weird hyphenations but KEEP newlines for diffing
         t = t.replace("-\n", "")
-        t = t.replace("\n", " ")
-        t = " ".join(t.split())
+        # Do NOT replace \n with space anymore
         if t:
             pages.append(t)
-    return "\n".join(pages).strip()
+    return "\n\n".join(pages).strip()
 
 def load_last() -> str:
     if os.path.exists(CACHE_PATH):
@@ -156,6 +156,7 @@ DIFF (Changes made):
 ---
 
 TASKS:
+0. **DETECTED CHANGES LIST**: Start your response by listing the *exact* changes you see (e.g. "Changed 'Manager' to 'Senior Manager'").
 1. **Contextual Analysis**: How does this change fit with the rest of the CV? (e.g. "Adding Python makes sense given your Django experience" OR "Adding Neurosurgery seems random for a Frontend Developer").
 2. **Impact Assessment**: Did this change make the CV stronger or weaker? Why?
 3. **Critical Review**: Are there new issues? (Typos, weak verbs, inconsistencies).
