@@ -140,19 +140,26 @@ def make_diff(old: str, new: str) -> str:
         )
     )
 
-def analyze(diff_text: str, previous_feedback: str = None) -> str:
+def analyze(diff_text: str, new_text: str, previous_feedback: str = None) -> str:
     original_prompt = f"""
 You are an expert Career Coach and Tech Recruiter. The user has modified their CV. 
-Your goal is to understand the *intent* behind the changes and provide strategic advice.
+Your goal is to understand the *intent* behind the changes and provide strategic advice based on the **FULL CONTEXT** of the CV.
+
+FULL CV PREVIEW:
+---
+{new_text}
+---
+
+DIFF (Changes made):
+---
+{diff_text}
+---
 
 TASKS:
-1. **Analyze the Change**: Don't just list diffs. Explain *what* the user tried to improve (e.g., "You strengthened your backend skills by adding Go...").
+1. **Contextual Analysis**: How does this change fit with the rest of the CV? (e.g. "Adding Python makes sense given your Django experience" OR "Adding Neurosurgery seems random for a Frontend Developer").
 2. **Impact Assessment**: Did this change make the CV stronger or weaker? Why?
 3. **Critical Review**: Are there new issues? (Typos, weak verbs, inconsistencies).
-4. **Strategic Advice**: What is the ONE investigation they should do next? (e.g. "Check if this keyword fits the job description").
-
-DIFF:
-{diff_text}
+4. **Strategic Advice**: What is the ONE investigation they should do next?
 """
     
     if previous_feedback:
@@ -217,7 +224,7 @@ def process_cv():
         if previous_feedback:
             logger.info("Önceki hafıza yüklendi (Memory).")
 
-        result = analyze(diff_text, previous_feedback)
+        result = analyze(diff_text, new_text, previous_feedback)
         print("\nLLM Analizi:\n")
         print(result)
 
