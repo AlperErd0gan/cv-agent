@@ -39,7 +39,7 @@ Sistemin stabil çalışması için yapılan kritik ayarlar:
 ### a. Atomic Save Sorunu
 Editörler dosyayı kaydederken *üzerine yazmak* yerine *silip yeni dosya* oluşturduğunda Docker'ın takibi kopuyordu.
 - **Çözüm**: Docker'a tek bir dosya yerine, **ana klasörü (`/`)** `/host_data` olarak bağladık.
-- Kod (`watcher.py`), dosyayı `/host_data/Alper_Erdogan_CV.pdf` yolundan okuyacak şekilde güncellendi.
+- Kod (`watcher.py`), dosyayı `/host_data/cv.pdf` yolundan okuyacak şekilde güncellendi.
 
 ### b. Node Versiyonu
 Vite, eski Node.js sürümlerinde çalışmadığı için Frontend Dockerfile'ı `node:22-alpine` sürümüne güncellendi.

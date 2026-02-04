@@ -23,7 +23,7 @@ MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 llm = OllamaLLM(model=MODEL, base_url=OLLAMA_BASE_URL)
 
 # Docker içinde çakışmayı önlemek için /data klasörünü varsayılan yapıyoruz
-env_pdf = os.getenv("PDF_PATH", "/data/Alper_Erdogan_CV.pdf")
+env_pdf = os.getenv("PDF_PATH", "/data/cv.pdf")
 env_db = os.getenv("DB_PATH", "/data/cv_agent.db")
 
 PDF_PATH = os.path.abspath(env_pdf)
