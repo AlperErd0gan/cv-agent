@@ -1,5 +1,5 @@
 .container {
-  max_width: 1200px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Inter', system-ui, sans-serif;
@@ -44,6 +44,21 @@ main {
   border: 1px solid #ddd;
   min-height: 300px;
   white-space: pre-wrap;
+}
+
+.upload-box {
+  background-color: #f0f0f0;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 2px dashed #bbb;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.upload-box:hover {
+  border-color: #646cff;
+  background-color: #e8e8e8;
 }
 
 .history-panel ul {

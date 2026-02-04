@@ -51,6 +51,34 @@ function App() {
       <main>
         <section className="live-panel">
           <h2>Latest Analysis</h2>
+
+          <div className="upload-box">
+            <h3>Upload New CV</h3>
+            <input type="file" accept=".pdf" onChange={async (e) => {
+              const file = e.target.files[0]
+              if (!file) return
+
+              const formData = new FormData()
+              formData.append('file', file)
+
+              try {
+                const res = await fetch('http://localhost:8000/upload', {
+                  method: 'POST',
+                  body: formData
+                })
+                const data = await res.json()
+                if (data.status === 'success') {
+                  // Optionally clean input or show notification
+                  console.log("Upload success")
+                } else {
+                  console.error("Upload error", data)
+                }
+              } catch (err) {
+                console.error("Upload failed", err)
+              }
+            }} />
+          </div>
+
           <div className="markdown-box">
             {analysis ? <ReactMarkdown>{analysis}</ReactMarkdown> : <p>Waiting for changes...</p>}
           </div>
