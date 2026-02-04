@@ -47,19 +47,27 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             cv_hash TEXT,
             diff_text TEXT,
-            llm_response TEXT
+            llm_response TEXT,
+            full_text TEXT
         )
     ''')
+    
+    # Migration for existing DBs
+    try:
+        c.execute('ALTER TABLE history ADD COLUMN full_text TEXT')
+    except sqlite3.OperationalError:
+        pass # Column likely exists
+    
     conn.commit()
     conn.close()
 
 
-def save_analysis(cv_hash, diff_text, llm_response):
-    """Analiz sonucunu kaydet."""
+def save_analysis(cv_hash, diff_text, llm_response, full_text):
+    """Analiz sonucunu ve metni kaydet."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('INSERT INTO history (cv_hash, diff_text, llm_response) VALUES (?, ?, ?)',
-              (cv_hash, diff_text, llm_response))
+    c.execute('INSERT INTO history (cv_hash, diff_text, llm_response, full_text) VALUES (?, ?, ?, ?)',
+              (cv_hash, diff_text, llm_response, full_text))
     conn.commit()
     conn.close()
 
@@ -97,15 +105,6 @@ def file_sha256(path: str) -> str:
             h.update(chunk)
     return h.hexdigest()
 
-def load_last_hash() -> str:
-    if os.path.exists(HASH_PATH):
-        return open(HASH_PATH, "r").read().strip()
-    return ""
-
-def save_last_hash(h: str):
-    with open(HASH_PATH, "w") as f:
-        f.write(h)
-
 
 def pdf_to_text(path: str) -> str:
     reader = PdfReader(path)
@@ -119,15 +118,16 @@ def pdf_to_text(path: str) -> str:
             pages.append(t)
     return "\n\n".join(pages).strip()
 
-def load_last() -> str:
-    if os.path.exists(CACHE_PATH):
-        with open(CACHE_PATH, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
-def save_last(text: str):
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
-        f.write(text)
+def get_last_state():
+    """DB'den son hash ve texti getir."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT cv_hash, full_text FROM history ORDER BY id DESC LIMIT 1')
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return row[0], row[1]
+    return "", ""
 
 def make_diff(old: str, new: str) -> str:
     return "\n".join(
@@ -194,16 +194,16 @@ def process_cv():
             return
         
         new_hash = file_sha256(PDF_PATH)
-        old_hash = load_last_hash()
+        old_hash, old_text = get_last_state()
+        
         if new_hash == old_hash:
             return
-        save_last_hash(new_hash)
 
         new_text = pdf_to_text(PDF_PATH)
-        old_text = load_last()
 
         if not old_text:
-            save_last(new_text)
+            # First run or empty DB, just save baseline
+            save_analysis(new_hash, "Baseline (First Run)", "Initial setup.", new_text)
             logger.info("Baseline kaydedildi (ilk sürüm).")
             return
 
@@ -230,8 +230,7 @@ def process_cv():
         print(result)
 
         # Yeni sonucu kaydet
-        save_analysis(new_hash, diff_text, result)
-        save_last(new_text)
+        save_analysis(new_hash, diff_text, result, new_text)
 
         if ON_ANALYSIS_COMPLETE:
             ON_ANALYSIS_COMPLETE(result)
