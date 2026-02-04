@@ -1,0 +1,8 @@
+langchain-ollama
+requests
+fastapi
+uvicorn
+websockets
+python-multipart
+watchdog
+pypdf

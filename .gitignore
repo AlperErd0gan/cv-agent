@@ -1,0 +1,32 @@
+# Sensitive / Private Data
+*.pdf
+*.docx
+*.doc
+*.db
+*.sqlite3
+*.log
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.pytest_cache/
+
+# Node / Web
+node_modules/
+dist/
+build/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Application Specific
+.cv_last.*
+backend/__pycache__/
+frontend/node_modules/
+frontend/dist/
