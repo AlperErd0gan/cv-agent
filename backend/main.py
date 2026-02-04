@@ -1,8 +1,8 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import logging
-from watcher import process_cv, init_db, get_last_feedback, DB_PATH
+from watcher import process_cv, init_db, get_last_feedback, DB_PATH, PDF_PATH
 import threading
 import os
 import sqlite3
@@ -79,6 +79,21 @@ def get_history():
     rows = c.fetchall()
     conn.close()
     return {"history": rows}
+
+@app.post("/upload")
+async def upload_cv(file: UploadFile = File(...)):
+    """Upload a new CV PDF. This will overwrite the existing file and trigger the watcher."""
+    try:
+        # Save the file to the path monitored by watcher
+        content = await file.read()
+        with open(PDF_PATH, "wb") as f:
+            f.write(content)
+        
+        logger.info(f"New CV uploaded to {PDF_PATH}")
+        return {"status": "success", "message": "CV uploaded and analysis triggered."}
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        return {"status": "error", "message":str(e)}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
