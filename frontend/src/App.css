@@ -1,86 +1,208 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 1rem;
   font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background-color: #f5f7fa;
+  /* Light background for contrast */
 }
 
 header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  /* Center title */
   align-items: center;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
-}
-
-.status {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  background: #eee;
-}
-
-.status.online {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status.offline {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-main {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-}
-
-.markdown-box {
-  background: #f9f9f9;
-  padding: 2rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background: #fff;
   border-radius: 8px;
-  border: 1px solid #ddd;
-  min-height: 300px;
-  white-space: pre-wrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.upload-box {
-  background-color: #f0f0f0;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  border: 2px dashed #bbb;
-  text-align: center;
-  transition: all 0.3s ease;
+/* Split View Layout */
+.split-view {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  /* Slightly tighter gap */
+  overflow: hidden;
+  height: 100%;
 }
 
-.upload-box:hover {
-  border-color: #646cff;
-  background-color: #e8e8e8;
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  /* Softer corners */
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+  /* Subtle shadow */
+  transition: all 0.2s ease-in-out;
 }
 
-.history-panel ul {
+.history-panel {
+  flex: 1;
+  min-width: 300px;
+  /* Ensure readable minimum width */
+  max-width: 25%;
+  /* Don't let history take too much space */
+  background-color: #ffffff;
+}
+
+.chat-panel {
+  flex: 3;
+  background-color: #fff;
+}
+
+.panel h2 {
+  margin-top: 0;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+/* History Styles */
+.history-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.history-list ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
-.history-panel li {
-  margin-bottom: 1rem;
-  border: 1px solid #eee;
-  padding: 0.5rem;
-  border-radius: 4px;
+.history-list li {
+  margin-bottom: 0.8rem;
+  border: 1px solid #ddd;
+  padding: 0.8rem;
+  border-radius: 6px;
+  background-color: #fff;
 }
 
-details {
-  margin-top: 0.5rem;
+.history-header {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+details summary {
   cursor: pointer;
+  font-weight: 500;
+  color: #007bff;
 }
 
 .history-content {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #fafafa;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f1f1f1;
+  border-radius: 4px;
   font-size: 0.9rem;
+}
+
+/* Chat/Analysis Styles */
+.upload-box {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+  text-align: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.upload-box:hover {
+  border-color: #007bff;
+  background-color: #f1f8ff;
+}
+
+.analysis-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.markdown-box {
+  background: #fff;
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.empty-state {
+  text-align: center;
+  color: #888;
+  margin-top: 3rem;
+  font-style: italic;
+}
+
+/* Loading Spinner */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3rem;
+  color: #555;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Behaviour */
+@media (max-width: 768px) {
+  .container {
+    height: auto;
+    min-height: 100vh;
+    padding: 0.5rem;
+  }
+
+  .split-view {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .panel {
+    height: 500px;
+    /* Fixed height for panels on mobile to allow internal scroll */
+    max-width: none;
+    flex: none;
+  }
 }
