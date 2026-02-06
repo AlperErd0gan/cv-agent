@@ -8,6 +8,7 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [chatMessages, setChatMessages] = useState([])
+  const [isChatLoading, setIsChatLoading] = useState(false)
 
   const handleChatSend = async () => {
     if (!chatInput.trim()) return
@@ -133,7 +134,6 @@ function App() {
               {isProcessing && (
                 <div className="loading-indicator">
                   <div className="spinner"></div>
-                  <p>Analyzing CV with AI Model...</p>
                 </div>
               )}
 
@@ -163,19 +163,27 @@ function App() {
                     </div>
                   </div>
                 ))}
+                {isChatLoading && (
+                  <div className="chat-message assistant">
+                    <strong>AI: </strong>
+                    <div className="message-content">
+                      <div className="spinner-small"></div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="chat-input-area">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder={isProcessing ? "Waiting for analysis to complete..." : "Ask a question about your CV..."}
-                  disabled={isProcessing}
+                  placeholder="Ask a question about your CV..."
+                  disabled={isProcessing || isChatLoading}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !isProcessing) handleChatSend()
+                    if (e.key === 'Enter' && !isProcessing && !isChatLoading) handleChatSend()
                   }}
                 />
-                <button onClick={handleChatSend} disabled={!chatInput.trim() || isProcessing}>Send</button>
+                <button onClick={handleChatSend} disabled={!chatInput.trim() || isProcessing || isChatLoading}>Send</button>
               </div>
             </div>
           </div>
