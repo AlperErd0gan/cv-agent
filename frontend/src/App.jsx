@@ -128,23 +128,33 @@ function App() {
 
           <div className="analysis-area">
             {/* Analysis Section */}
-            {isProcessing && (
-              <div className="loading-indicator">
-                <div className="spinner"></div>
-                <p>Analyzing CV with AI Model...</p>
-              </div>
-            )}
+            <div className="section-box analysis-result-box">
+              <h3 className="section-title">Analysis Result</h3>
+              {isProcessing && (
+                <div className="loading-indicator">
+                  <div className="spinner"></div>
+                  <p>Analyzing CV with AI Model...</p>
+                </div>
+              )}
 
-            {!isProcessing && analysis && (
-              <div className="markdown-box">
-                <ReactMarkdown>{analysis}</ReactMarkdown>
-              </div>
-            )}
+              {!isProcessing && analysis && (
+                <div className="markdown-box">
+                  <ReactMarkdown>{analysis}</ReactMarkdown>
+                </div>
+              )}
+
+              {!isProcessing && !analysis && (
+                <div className="empty-state">
+                  <p>Upload a CV to see the analysis here.</p>
+                </div>
+              )}
+            </div>
 
             {/* Chat Section */}
-            <div className="chat-box">
-              <h3>Chat with your CV</h3>
+            <div className="section-box chat-box">
+              <h3 className="section-title">Chat with CV</h3>
               <div className="chat-messages">
+                {chatMessages.length === 0 && <p className="chat-placeholder">Ask any question about the CV...</p>}
                 {chatMessages.map((msg, index) => (
                   <div key={index} className={`chat-message ${msg.role}`}>
                     <strong>{msg.role === 'user' ? 'You' : 'AI'}: </strong>
@@ -168,13 +178,6 @@ function App() {
                 <button onClick={handleChatSend} disabled={!chatInput.trim() || isProcessing}>Send</button>
               </div>
             </div>
-
-
-            {!isProcessing && !analysis && (
-              <div className="empty-state">
-                <p>Upload a CV to start the analysis.</p>
-              </div>
-            )}
           </div>
         </section>
       </main>
