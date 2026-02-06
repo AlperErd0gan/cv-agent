@@ -6,6 +6,29 @@ function App() {
   const [analysis, setAnalysis] = useState('')
   const [history, setHistory] = useState([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+  const [chatMessages, setChatMessages] = useState([])
+
+  const handleChatSend = async () => {
+    if (!chatInput.trim()) return
+
+    const userMsg = { role: 'user', content: chatInput }
+    setChatMessages(prev => [...prev, userMsg])
+    setChatInput('')
+
+    try {
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg.content })
+      })
+      const data = await res.json()
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+    } catch (err) {
+      console.error("Chat error", err)
+      setChatMessages(prev => [...prev, { role: 'assistant', content: "Error sending message." }])
+    }
+  }
 
   useEffect(() => {
     // History Fetch
@@ -104,6 +127,7 @@ function App() {
           </div>
 
           <div className="analysis-area">
+            {/* Analysis Section */}
             {isProcessing && (
               <div className="loading-indicator">
                 <div className="spinner"></div>
@@ -116,6 +140,35 @@ function App() {
                 <ReactMarkdown>{analysis}</ReactMarkdown>
               </div>
             )}
+
+            {/* Chat Section */}
+            <div className="chat-box">
+              <h3>Chat with your CV</h3>
+              <div className="chat-messages">
+                {chatMessages.map((msg, index) => (
+                  <div key={index} className={`chat-message ${msg.role}`}>
+                    <strong>{msg.role === 'user' ? 'You' : 'AI'}: </strong>
+                    <div className="message-content">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="chat-input-area">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={isProcessing ? "Waiting for analysis to complete..." : "Ask a question about your CV..."}
+                  disabled={isProcessing}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isProcessing) handleChatSend()
+                  }}
+                />
+                <button onClick={handleChatSend} disabled={!chatInput.trim() || isProcessing}>Send</button>
+              </div>
+            </div>
+
 
             {!isProcessing && !analysis && (
               <div className="empty-state">
