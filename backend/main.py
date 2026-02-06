@@ -2,10 +2,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import logging
-from watcher import process_cv, init_db, get_last_feedback, DB_PATH, PDF_PATH
+from watcher import process_cv, init_db, get_last_feedback, chat_with_cv, get_last_state, DB_PATH, PDF_PATH
 import threading
 import os
 import sqlite3
+from pydantic import BaseModel
 
 # Initial Setup
 logging.basicConfig(level=logging.INFO)
@@ -94,6 +95,23 @@ async def upload_cv(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         return {"status": "error", "message":str(e)}
+
+class ChatRequest(BaseModel):
+    message: str
+
+@app.post("/chat")
+def chat_endpoint(request: ChatRequest):
+    """Chat with the current CV."""
+    try:
+        _, cv_text = get_last_state()
+        if not cv_text:
+            return {"response": "CV henüz yüklenmedi veya analiz edilmedi."}
+        
+        response = chat_with_cv(request.message, cv_text)
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"Chat failed: {e}")
+        return {"response": "Chat sırasında bir hata oluştu."}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

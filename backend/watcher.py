@@ -184,6 +184,27 @@ TASK:
     return llm.invoke(prompt).strip()
 
 
+def chat_with_cv(query: str, cv_text: str) -> str:
+    """Chat with the CV content."""
+    prompt = f"""
+You are an expert Career Coach and Tech Recruiter.
+The user is asking a question about their CV.
+
+CV CONTENT:
+---
+{cv_text}
+---
+
+USER QUESTION:
+{query}
+
+ANSWER:
+Answer the question based ONLY on the CV content provided above. If the answer is not in the CV, say "I cannot find that information in the CV."
+Be concise and helpful.
+"""
+    return llm.invoke(prompt).strip()
+
+
 
 
 def process_cv():
@@ -197,6 +218,10 @@ def process_cv():
         old_hash, old_text = get_last_state()
         
         if new_hash == old_hash:
+            logger.info("PDF değişmedi, önceki analiz gönderiliyor.")
+            last_feedback = get_last_feedback()
+            if last_feedback and ON_ANALYSIS_COMPLETE:
+                ON_ANALYSIS_COMPLETE(last_feedback)
             return
 
         new_text = pdf_to_text(PDF_PATH)
