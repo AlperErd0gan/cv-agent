@@ -13,16 +13,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend")
 init_db()
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -60,12 +50,26 @@ def run_watcher_loop(loop):
     logger.info("Background watcher started.")
     observer.join()
 
-# Start Watcher in Background
-@app.on_event("startup")
-async def startup_event():
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
     loop = asyncio.get_running_loop()
     t = threading.Thread(target=run_watcher_loop, args=(loop,), daemon=True)
     t.start()
+    yield
+    # Shutdown logic (if any) can go here
+
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
