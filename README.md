@@ -60,6 +60,22 @@ docker-compose run --rm backend python watcher.py --once
 *(Cron config remains the same, just point to the backend service)*
 
 
+## Running Tests
+
+To run the backend unit tests:
+
+1. Install test dependencies:
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+
+2. Run tests using pytest:
+   ```bash
+   cd backend
+   pytest tests/test_main.py
+   ```
+
+
 ## Roadmap
 
 1. **Add Memory (State)**: Implement a database to track feedback over time, allowing the agent to remember past critiques.

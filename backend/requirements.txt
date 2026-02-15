@@ -6,3 +6,5 @@ websockets
 python-multipart
 watchdog
 pypdf
+pytest
+httpx
