@@ -16,6 +16,7 @@ function App() {
     const userMsg = { role: 'user', content: chatInput }
     setChatMessages(prev => [...prev, userMsg])
     setChatInput('')
+    setIsChatLoading(true) // Start loading
 
     try {
       const res = await fetch('http://localhost:8000/chat', {
@@ -28,6 +29,8 @@ function App() {
     } catch (err) {
       console.error("Chat error", err)
       setChatMessages(prev => [...prev, { role: 'assistant', content: "Error sending message." }])
+    } finally {
+      setIsChatLoading(false) // Stop loading
     }
   }
 
