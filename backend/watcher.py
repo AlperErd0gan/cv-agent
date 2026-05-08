@@ -1,4 +1,6 @@
 import os
+import sys
+import json
 import time
 import difflib
 from watchdog.observers.polling import PollingObserver as Observer
@@ -140,50 +142,6 @@ def make_diff(old: str, new: str) -> str:
         )
     )
 
-def analyze(diff_text: str, new_text: str, previous_feedback: str = None) -> str:
-    original_prompt = f"""
-You are an expert Career Coach and Tech Recruiter. The user has modified their CV. 
-Your goal is to understand the *intent* behind the changes and provide strategic advice based on the **FULL CONTEXT** of the CV.
-
-FULL CV PREVIEW:
----
-{new_text}
----
-
-DIFF (Changes made):
----
-{diff_text}
----
-
-TASKS:
-0. **DETECTED CHANGES LIST**: Start your response by listing the *exact* changes you see (e.g. "Changed 'Manager' to 'Senior Manager'").
-1. **Contextual Analysis**: How does this change fit with the rest of the CV? (e.g. "Adding Python makes sense given your Django experience" OR "Adding Neurosurgery seems random for a Frontend Developer").
-2. **Impact Assessment**: Did this change make the CV stronger or weaker? Why?
-3. **Critical Review**: Are there new issues? (Typos, weak verbs, inconsistencies).
-4. **Strategic Advice**: What is the ONE investigation they should do next?
-"""
-    
-    if previous_feedback:
-        prompt = f"""
-CONTEXT:
-The user is iterating on their CV based on your previous advice.
-PREVIOUS ADVICE:
----
-{previous_feedback}
----
-
-TASK:
-1. **Verification**: Did the user effectively address your previous feedback? Be specific ("You fixed the typo", "You added the missing skill").
-2. **New Analysis**: Analyze the new content as described below.
-
-{original_prompt}
-"""
-    else:
-        prompt = original_prompt
-
-    return llm.invoke(prompt).strip()
-
-
 def chat_with_cv(query: str, cv_text: str) -> str:
     """Chat with the CV content."""
     prompt = f"""
@@ -208,26 +166,26 @@ Be concise and helpful.
 
 
 def process_cv():
-    """CV değişikliklerini kontrol et ve analiz et."""
+    from agents import run_multi_agent_analysis
+
     try:
         if not os.path.exists(PDF_PATH):
             logger.warning("PDF bulunamadı.")
             return
-        
+
         new_hash = file_sha256(PDF_PATH)
         old_hash, old_text = get_last_state()
-        
+
         if new_hash == old_hash:
             logger.info("PDF değişmedi, önceki analiz gönderiliyor.")
             last_feedback = get_last_feedback()
             if last_feedback and ON_ANALYSIS_COMPLETE:
-                ON_ANALYSIS_COMPLETE(last_feedback)
+                ON_ANALYSIS_COMPLETE(json.dumps({"type": "final", "report": last_feedback}))
             return
 
         new_text = pdf_to_text(PDF_PATH)
 
         if not old_text:
-            # First run or empty DB, just save baseline
             save_analysis(new_hash, "Baseline (First Run)", "Initial setup.", new_text)
             logger.info("Baseline kaydedildi (ilk sürüm).")
             return
@@ -237,29 +195,34 @@ def process_cv():
 
         diff_text = make_diff(old_text, new_text)
 
-        # Çok büyük diff’i LLM’e yollama (maliyet değil ama hız + kalite)
         if len(diff_text) > 10000:
-            diff_text = diff_text[:12000] + "\n... (diff truncated)"
+            diff_text = diff_text[:10000] + "\n... (diff truncated)"
 
-        print("\n" + "="*70)
-        logger.info("CV PDF değişikliği tespit edildi.")
-        print("="*70)
+        logger.info("CV değişikliği tespit edildi, multi-agent analiz başlatılıyor.")
 
-        # Önceki feedback'i al
         previous_feedback = get_last_feedback()
         if previous_feedback:
             logger.info("Önceki hafıza yüklendi (Memory).")
 
-        result = analyze(diff_text, new_text, previous_feedback)
-        print("\nLLM Analizi:\n")
-        print(result)
+        def on_agent_complete(agent_name: str, report: str, tool_data: dict):
+            if ON_ANALYSIS_COMPLETE:
+                msg = json.dumps({
+                    "type": "agent_update",
+                    "agent": agent_name,
+                    "report": report,
+                    "tool_data": tool_data,
+                })
+                ON_ANALYSIS_COMPLETE(msg)
 
-        # Yeni sonucu kaydet
+        result = run_multi_agent_analysis(
+            llm, new_text, diff_text, previous_feedback, on_agent_complete
+        )
+        logger.info("Multi-agent analiz tamamlandı.")
+
         save_analysis(new_hash, diff_text, result, new_text)
 
         if ON_ANALYSIS_COMPLETE:
-            ON_ANALYSIS_COMPLETE(result)
-
+            ON_ANALYSIS_COMPLETE(json.dumps({"type": "final", "report": result}))
 
     except Exception as e:
         logger.error(f"Hata oluştu: {e}", exc_info=True)

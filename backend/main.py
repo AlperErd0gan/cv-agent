@@ -11,7 +11,6 @@ from pydantic import BaseModel
 # Initial Setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend")
-init_db()
 
 class ConnectionManager:
     def __init__(self):
@@ -22,11 +21,18 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
+        dead = []
         for connection in self.active_connections:
-            await connection.send_text(message)
+            try:
+                await connection.send_text(message)
+            except Exception:
+                dead.append(connection)
+        for conn in dead:
+            self.active_connections.remove(conn)
 
 manager = ConnectionManager()
 
@@ -54,12 +60,11 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
+    init_db()
     loop = asyncio.get_running_loop()
     t = threading.Thread(target=run_watcher_loop, args=(loop,), daemon=True)
     t.start()
     yield
-    # Shutdown logic (if any) can go here
 
 app = FastAPI(lifespan=lifespan)
 
